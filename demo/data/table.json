@@ -1,0 +1,13 @@
+{
+  "data": [
+    {"id": 1, "name": "tongfu", "state": 1, "createTime": "2024-07-01", "updateTime": "-", "__operators__": ""},
+    {"id": 2, "name": "master Fu", "state": 1, "createTime": "2024-07-01", "updateTime": "2024-07-12", "__operators__": ""},
+    {"id": 3, "name": "uncle GuiGuZi", "state": 1, "createTime": "2024-07-01", "updateTime": "-", "__operators__": ""}
+  ],
+  "pagination": {
+    "total": 3,
+    "pagesize": 10,
+    "pages": 1,
+    "currentpage": 1
+  }
+}
