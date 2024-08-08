@@ -1,4 +1,4 @@
-<h1 align="center">TFHtml v0.1.0</h1>
+<h1 align="center">TFHtml v0.3.0</h1>
 
 ## TFHtml
 
@@ -91,6 +91,58 @@ my = $("#form").tfform({
         "checkbox": ["1", "3"],
         "textarea": "textarea",
     }
+});
+```
+
+### Plugin tfdialog
+
+html
+```html
+<div id="dialog">
+    <form action="data/form.do" method="post">
+        <div class="title-bar">
+            <div class="title">dialog</div>
+            <div class="buttons">
+                <i data-dialog-button="close">X</i>
+            </div>
+        </div>
+        <div class="content-box">
+            <h3>title</h3>
+            <p>this is a dialog demo.</p>
+        </div>
+    </form>
+</div>
+```
+
+javascript
+```javascript
+var my = $("#dialog").tfdialog({
+    onResizeWindow: function(){
+        console.log("window is resizing...");
+    },
+    onShow : function(){
+        console.log("showing...");
+    },
+    onHide : function(){
+        console.log("hiding...");
+    }
+});
+```
+
+### Plugin tftips
+
+html
+```html
+<div id="tips1" style="position: relative; margin: 0 auto; width: 640px;">
+    <h3>title</h3>
+    <p>this is a dialog demo.</p>
+</div>
+```
+
+javascript
+```javascript
+$("#tips1").tftips({
+    text: "hello tfhtml!"
 });
 ```
 

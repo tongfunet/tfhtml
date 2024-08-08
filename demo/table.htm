@@ -41,9 +41,20 @@
     </div>
 </div>
 <script type="text/javascript">
-    my = $("#table").tftable({
-        onMakeDataUrl: function(){
-            return "data/table.json?pn=" + this.getDataUrlPN() + "&sorts=" + this.getDataUrlSorts();
+    var my = $("#table").tftable({
+        // onMakeDataUrl: function(params){ console.log("onMakeDataUrl", this, params); },
+        // onMakeDataMethod: function(){ console.log("onMakeDataMethod", this); },
+        // onMakeDataData: function(){ console.log("onMakeDataData", this); },
+        // onProcessSuccess: function(data){ console.log("onProcessSuccess", this, data); },
+        // onProcessError: function(xhr, status, error){ console.log("onProcessError", this, xhr, status, error); },
+        // onDrawData: function(data){ console.log("onDrawData", this, data); },
+        // onCreateBodyRow: function(){ console.log("onCreateBodyRow", this); },
+        // onCreateBodyRowField: function(){ console.log("onCreateBodyRowField", this); },
+        // onDrawHead: function(params){ console.log("onDrawHead", this, params); },
+        // onDrawPage: function(params){ console.log("onDrawPage", this, params); },
+        // onCreatePageButton: function(params){ console.log("onCreatePageButton", this, params); },
+        onMakeDataUrl: function(params){
+            return "data/table.json?pn=" + params.pn + "&sorts=" + params.sorts;
         }
     });
 </script>

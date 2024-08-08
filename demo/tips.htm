@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>同福网</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script type="text/javascript" src="../js/jquery.min.js"></script>
+    <script type="text/javascript" src="../js/tfhtml.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/tfhtml.css">
+    <link rel="stylesheet" type="text/css" href="../css/demo.css">
+</head>
+<body>
+<div style="margin: 0 auto; width: 1000px;">
+    <h1>TFHtml v0.1.0</h1>
+    <div>
+        <a href="JavaScript:history.back()">back</a>
+    </div>
+    <h2>tftips</h2>
+    <div>
+        <a href="JavaScript:void(0)" onclick="show()">show</a>
+    </div>
+    <div id="tips1" style="position: relative; margin: 0 auto; width: 640px;">
+        <h3>title</h3>
+        <p>this is a dialog demo.</p>
+    </div>
+</div>
+<script type="text/javascript">
+    function show(){
+        $("#tips1").tftips({
+            text: "hello tfhtml!"
+        });
+    }
+</script>
+</body>
+</html>

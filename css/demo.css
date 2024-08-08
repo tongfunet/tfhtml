@@ -1,0 +1,26 @@
+#dialog{
+    display: none;
+    border: 1px solid #666;
+    background: white;
+}
+#dialog .title-bar{
+    display: block;
+    overflow: hidden;
+    padding: 3px 6px 3px 6px;
+    border-bottom: 1px solid #666;
+}
+#dialog .title-bar .title{
+    float: left;
+}
+#dialog .title-bar .buttons{
+    float: right;
+}
+#dialog .title-bar .buttons i{
+    display: inline-block;
+    font-style: normal;
+}
+#dialog .content-box{
+    display: block;
+    overflow: hidden;
+    padding: 3px 6px 3px 6px;
+}

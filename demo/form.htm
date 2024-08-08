@@ -14,7 +14,7 @@
         <a href="JavaScript:history.back()">back</a>
     </div>
     <h2>tfform</h2>
-    <div id="form">
+    <div id="form" style="position: relative; margin: 0 auto; width: 640px;">
         <form action="data/form.do" method="post">
             <table>
                 <tr><td>text</td><td><input type="text" name="text"></td></tr>
@@ -48,6 +48,18 @@
             "radio": ["1"],
             "checkbox": ["1", "3"],
             "textarea": "textarea",
+        },
+        // onPostValidateError: function(rule){ console.log("onPostValidateError", this, rule); },
+        // onMakeFormAction: function(){ console.log("onMakeFormAction", this); },
+        // onMakeFormMethod: function(){ console.log("onMakeFormMethod", this); },
+        // onMakeFormData: function(){ console.log("onMakeFormData", this); return new FormData(this[0]); },
+        // onProcessSuccess: function(data){ console.log("onProcessSuccess", this, data); },
+        // onProcessError: function(xhr, status, error){ console.log("onProcessError", this, xhr, status, error); },
+        onPostValidateError: function(rule){
+            this.tftips({
+                text: rule.errmsg
+            });
+            this.find('[name="'+rule.name+'"]').focus();
         }
     });
 </script>

@@ -23,3 +23,17 @@
 .table .pagination a:hover{
     text-decoration: none;
 }
+
+/*
+ * tips
+ */
+
+.tips{
+    display: block;
+    position: absolute;
+    background: #333;
+    border: 0;
+    border-radius: 8px;
+    padding: 3px 6px;
+    color: #fff;
+}

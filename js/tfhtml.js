@@ -12,22 +12,22 @@
  *     qsPageButtons
  *
  *   functions:
- *     onEventSortButtons
- *     onEventPageButtons
- *     onCreateBodyRow
- *     onCreateBodyRowField
- *     onCreatePageButton
- *     onDrawData
- *     onMakeDataUrl
- *     onMakeDataMethod
- *     onMakeDataData
- *     onDrawHead
- *     onDrawPage
+ *     onMakeDataUrl: function(params)
+ *     onMakeDataMethod: function()
+ *     onMakeDataData: function()
+ *     onProcessSuccess: function(data)
+ *     onProcessError: function(xhr, status, error)
+ *     onDrawData: function(data)
+ *     onCreateBodyRow: function()
+ *     onCreateBodyRowField: function()
+ *     onDrawHead: function(params)
+ *     onDrawPage: function(params)
+ *     onCreatePageButton: function(params)
  *
  * public:
  *   load
- *   getDataUrlPN
- *   getDataUrlSorts
+ *   getDataUrlPN: function()
+ *   getDataUrlSorts: function()
  *   sort
  *   page
  */
@@ -38,15 +38,7 @@
         return o.hasAttribute("data-" + key);
     }, getDataAttr = function(o, key){
         return o.getAttribute("data-" + key);
-    }, events = function(ex, objs, args, opts){
-        initArgs(ex, objs, args, opts);
-        initSortFields(objs.h.find(opts.qshfs), args.sfs, args.sfvs);
-        load(ex, objs, args, opts);
-    }, initArgs = function(ex, objs, args, opts){
-        ex.objs = objs;
-        ex.args = args;
-        ex.opts = opts;
-    }, initSortFields = function(hfs, sfs, sfvs){
+    }, initSortData = function(hfs, sfs, sfvs){
         hfs.each(function(i, o){
             if((s = hasDataAttr(o, "sortable")) && (sf = getDataAttr(o, "sort-field"))){
                 sfs[sf] = o;
@@ -54,110 +46,132 @@
                 sfvs[sf] = sfvs[sf] == null ? "" : sfvs[sf];
             }
         });
-    }, load = function(ex, objs, args, opts){
+    }, initPageNumber = function(pn){
+
+    }, loadData = function(params){
+        _loadData(params.a.onMakeDataUrl, params.a.onMakeDataMethod, params.a.onMakeDataData,
+            params.a.onProcessSuccess, params.a.onProcessError,
+            params.a.onDrawData, params.a.onCreateBodyRow, params.a.onCreateBodyRowField,
+            params.a.onDrawHead,
+            params.a.onDrawPage, params.a.onCreatePageButton,
+            params.o, params.s);
+    }, _loadData = function(f1, f2, f3,
+                            f4, f5,
+                            f6, f7, f8,
+                            f9,
+                            f10, f11,
+                            o, s){
         $.ajax({
-            url: makeDataUrl(ex, opts),
-            method: makeDataMethod(ex, opts),
-            data: makeDataData(ex, opts),
-            success: function(data){
-                return opts.onProcessSuccess ? opts.onProcessSuccess(ex, data, objs, args, opts) : processSuccess(ex, data, objs, args, opts) ;
+            url: makeDataUrl(f1, o, {pn: s.getDataUrlPN(), sorts: s.getDataUrlSorts()}),
+            method: makeDataMethod(f2, o),
+            data: makeDataData(f3, o),
+            success: function(d){
+                return f4 ? f4.call(o, d) : processSuccess(f6, f7, f8, f9, f10, f11, o, s, d) ;
             },
-            error: function(xhr, status, error){
-                return opts.onProcessError ? opts.onProcessError(xhr, status, error) : processError(xhr, status, error) ;
+            error: function(xhr, st, err){
+                return f5 ? f5.call(o, xhr, st, err) : processError(xhr, st, err) ;
             }
         });
-    }, makeDataUrl = function(ex, opts){
-        return opts.onMakeDataUrl ? opts.onMakeDataUrl.call(ex) : "data/table.json?pn=" + ex.getDataUrlPN() + "&sorts=" + ex.getDataUrlSorts();
-    }, makeDataMethod = function(ex, opts){
-        return opts.onMakeDataMethod ? opts.onMakeDataMethod() : "get";
-    }, makeDataData = function(ex, opts){
-        return opts.onMakeDataData ? opts.onMakeDataData() : {};
-    }, processSuccess = function(ex, data, objs, args, opts){
-        drawData(data, objs, args, opts);
-        eventSort(ex, objs, opts);
-        eventPage(ex, objs, opts);
-    }, processError = function(xhr, status, error){
-        console.log(xhr, status, error);
-    }, drawData = function(data, objs, args, opts){
-        if(opts.onDrawData) opts.onDrawData(data, objs, args, opts);
+    }, makeDataUrl = function(f1, o, p){
+        return f1 ? f1.call(o, p) : "data/table.json?pn=" + p.pn + "&sorts=" + p.sorts;
+    }, makeDataMethod = function(f1, o){
+        return f1 ? f1.call(o) : "get";
+    }, makeDataData = function(f1, o){
+        return f1 ? f1.call(o) : {};
+    }, processSuccess = function(f1, f2, f3, f4, f5, f6, o, s, d){
+        drawData(f1, f2, f3, f4, f5, f6, o, s.params.a, d);
+        eventSort(s, s.params.a);
+        eventPage(s, s.params.a);
+    }, processError = function(xhr, st, err){
+        console.log(xhr, st, err);
+    }, drawData = function(f1, f2, f3, f4, f5, f6, o, a, d){
+        if(f1) f1.call(o, d);
         else{
-            drawTableData(objs.bb, data.data, opts);
-            drawHead(args.sfs, args.sfvs, opts);
-            drawPage(objs.pb, data.pagination, opts);
+            drawTableHead(f4, o, a);
+            drawTableData(f2, f3, o, a, o.find(a.qsbb), d.data);
+            drawTablePage(f5, f6, o, a, o.find(a.qspb), d.pagination);
         }
-    }, drawTableData = function(bb, data, opts){
-        var i, f, tr, td;
-        bb.find(opts.qsbrs).not(opts.qspb).remove();
-        for(i=0;i<data.length;i++){
-            j = 0;
-            tr = createBodyRow(opts);
-            for(f in data[i]){
-                td = createBodyRowField(opts);
-                td.html(data[i][f]);
-                tr.append(td);
-                j++;
-            }
-            bb.append(tr);
-        }
-    }, drawHead = function(fs, fvs, opts){
-        if(opts.onDrawHead) opts.onDrawHead(fs, fvs);
+    }, drawTableHead = function(f1, o, a){
+        if(f1) f1.call(o, a);
         else{
-            for(var f in fvs){
-                var $f = $(fs[f]), fv = fvs[f];
+            for(var f in a.sfvs){
+                var $f = $(a.sfs[f]), fv = a.sfvs[f];
                 $f.find("i").remove();
                 if (fv === "desc") $f.append("<i>(desc)</i>");
                 else if (fv === "asc") $f.append("<i>(asc)</i>");
             }
         }
-    }, createBodyRow = function(opts){
-        return opts.onCreateBodyRow ? opts.onCreateBodyRow() : createElement("TR");
-    }, createBodyRowField = function(opts){
-        return opts.onCreateBodyRowField ? opts.onCreateBodyRowField() : createElement("TD");
-    }, createPageButton = function(pn, label, opts){
-        return opts.onCreatePageButton ? opts.onCreatePageButton(pn, label) : createElement("A").attr("data-pn", pn).html(label);
-    }, drawPage = function(pb, pg, opts){
-        if(opts.onDrawPage) opts.onDrawPage(pb, pg, opts);
+    }, drawTableData = function(f1, f2, o, a, tb, d){
+        var i, f, tr, td;
+        tb.find(a.qsbrs).not(a.qspb).remove();
+        for(i=0;i<d.length;i++){
+            j = 0;
+            tr = createBodyRow(f1, o);
+            for(f in d[i]){
+                td = createBodyRowField(f2, o);
+                td.html(d[i][f]);
+                tr.append(td);
+                j++;
+            }
+            tb.append(tr);
+        }
+    }, createBodyRow = function(f1, o){
+        return f1 ? f1.call(o) : createElement("TR");
+    }, createBodyRowField = function(f1, o){
+        return f1 ? f1.call(o) : createElement("TD");
+    }, createPageButton = function(f1, o, pn, label){
+        return f1 ? f1.call(o, {pn: pn, label: label}) : createElement("A").attr("data-pn", pn).html(label);
+    }, drawTablePage = function(f1, f2, o, a, pb, pg){
+        if(f1) f1.call(o, {page: pg});
         else{
             pb.children().remove();
-            pb.append(createPageButton(1, "home", opts));
-            pb.append(createPageButton(pg.currentpage-1, "previous", opts));
-            pb.append(createPageButton(pg.currentpage+1, "next", opts));
-            pb.append(createPageButton(pg.pages, "last", opts));
+            pb.append(createPageButton(f2, o, 1, "home"));
+            pb.append(createPageButton(f2, o, pg.currentpage-1, "previous"));
+            pb.append(createPageButton(f2, o, pg.currentpage+1, "next"));
+            pb.append(createPageButton(f2, o, pg.pages, "last"));
             pb.append("<span>total " + pg.total + ", percent page " + pg.pagesize + ", total pages " + pg.pages + "</span>");
         }
-    }, eventSort = function(ex, objs, opts){
-        return opts.onEventSortButtons ? opts.onEventSortButtons() : objs.h.find(opts.qshfs).unbind("click").click(function(){
-            ex.sort(this);
+    }, eventSort = function(s, a){
+        s.params.hb.find(a.qshfs).unbind("click").click(function(){
+            s.sort(this);
         });
-    }, eventPage = function(ex, objs, opts){
-        return opts.onEventPageButtons ? opts.onEventPageButtons() : objs.pb.find(opts.qspis).unbind("click").click(function(){
-            ex.page(this);
+    }, eventPage = function(s, a){
+        s.params.pb.find(a.qspis).unbind("click").click(function(){
+            s.page(this);
         });
-    }, sort = function(fvs, sf){
-        if(fvs[sf] != null){
-            if(fvs[sf] === "asc") fvs[sf] = "desc";
-            else if(fvs[sf] === "desc") fvs[sf] = "";
-            else fvs[sf] = "asc";
+    }, sortData = function(a, sf){
+        if(a.sfvs[sf] != null){
+            if(a.sfvs[sf] === "asc") a.sfvs[sf] = "desc";
+            else if(a.sfvs[sf] === "desc") a.sfvs[sf] = "";
+            else a.sfvs[sf] = "asc";
         }
+    }, pageNumber = function(a, pn){
+        a.pn = pn ? pn : 1;
+    }, init = function(params){
+        params.s.params = params;
+        initSortData(params.hb.find(params.a.qshfs), params.a.sfs = {}, params.a.sfvs = {});
+        initPageNumber(params.a.pn = 1);
+        loadData(params);
     }, _tfjqp = {
         load : function(){
-            load(this, this.objs, this.args, this.opts);
+            loadData(this.params);
         },
         getDataUrlPN : function(){
-            return this.args.pn;
+            return this.params.a.pn;
         },
         getDataUrlSorts : function(){
-            return JSON.stringify(this.args.sfvs);
+            return JSON.stringify(this.params.a.sfvs);
         },
         sort : function(e){
-            sort(this.args.sfvs, getDataAttr(e, "sort-field"));
-            load(this, this.objs, this.args, this.opts);
+            sortData(this.params.a, getDataAttr(e, "sort-field"));
+            loadData(this.params);
         },
         page : function(e){
-            this.args.pn = parseInt(getDataAttr(e, "pn"));
-            load(this, this.objs, this.args, this.opts);
+            pageNumber(this.params.a, parseInt(getDataAttr(e, "pn")));
+            loadData(this.params);
         },
         init : function(obj, opts){
+            opts = opts||{};
             opts.qsh = opts.qsHead ? opts.qsHead : "thead tr";
             opts.qshfs = opts.qsHeadFields ? opts.qsHeadFields : "th";
             opts.qsbb = opts.qsBodyBox ? opts.qsBodyBox : "tbody";
@@ -165,14 +179,12 @@
             opts.qsbrfs = opts.qsBodyRowFields ? opts.qsBodyRowFields : "td";
             opts.qspb = opts.qsPageBox ? opts.qsPageBox : ".pagination";
             opts.qspis = opts.qsPageItems ? opts.qsPageItems : "a";
-            var $obj = $(obj), objs = {h: $obj.find(opts.qsh), bb: $obj.find(opts.qsbb), pb: $obj.find(opts.qspb)}, args = {sfs: {}, sfvs: {}, pn: 1};
-            events(this, objs, args, opts);
+            init({s: this, o: $(obj), hb: $(obj).find(opts.qsh), bb: $(obj).find(opts.qsbb), pb: $(obj).find(opts.qspb), a: opts});
         }
     };
     _tfjqp.init.prototype = _tfjqp;
     $.fn.tftable = function(opts){
-        my = new _tfjqp.init(this, opts);
-        return my;
+        return new _tfjqp.init(this, opts);
     };
 })(jQuery);
 
@@ -181,146 +193,253 @@
  *
  * options:
  *   variables:
+ *     defaultData: {}
  *     dataType
- *     validateRules
- *     defaultData
+ *     validateRules: []
  *
  *   functions:
- *     onSubmitForm
- *     onProcessSuccess
- *     onProcessError
- *     onMakeFormAction
- *     onMakeFormMethod
- *     onMakeFormData
- *     onPostValidateError
+ *     onPostValidateError: function(rule)
+ *     onMakeFormAction: function()
+ *     onMakeFormMethod: function()
+ *     onMakeFormData: function()
+ *     onProcessSuccess: function(data)
+ *     onProcessError: function(xhr, status, error)
  *
  * public:
  *
  */
 (function($){
-    var events = function(ex, objs, args, opts){
-        setFormData(ex, objs.fm, opts);
-        objs.fm.unbind().bind("submit", function(){
-            submit(ex, objs.fm, opts);
-            return false;
-        });
-    }, setFormData = function(ex, fm, opts){
-        setFormDefaultData(ex, fm, opts.defaultData);
-    }, setFormDefaultData = function(ex, fm, dd){
-        for(var f in dd) setFormDefaultDataItems(ex, fm, fm.find('[name="'+f+'"]'), dd[f]);
-    }, setFormDefaultDataItems = function(ex, fm, elems, data){
-        if(elems.length) for(var i=0;i<elems.length;i++) setFormDefaultDataItem(ex, fm, i, elems[i], data);
-    }, setFormDefaultDataItem = function(ex, fm, index, elem, data){
-        if(elem.type && (elem.type === "radio" || elem.type === "checkbox")) for(var j=0;j<data.length;j++){ if(elem.value === data[j]) elem.checked = true }
-        else elem.value = (data instanceof Array) ? data[index] : data;
-    }, submit = function(ex, fm, opts){
-        return opts.onSubmitForm ? opts.onSubmitForm(ex, fm, opts) : submitForm(ex, fm, opts) ;
-    }, submitForm = function(ex, fm, opts){
-        makeFormData(fm, opts);
-        if(!validateFormData(ex, fm, opts.validateRules, opts)) return false;
-        var ajaxOpts = {
-            url: makeFormAction(fm, opts),
-            method: makeFormMethod(fm, opts),
+    var setFormData = function(params){
+        setFormDefaultData(params.f, params.a.defaultData);
+    }, setFormDefaultData = function(f, d){
+        for(var n in d) setFormDefaultDataItems(f, f.find('[name="'+n+'"]'), d[n]);
+    }, setFormDefaultDataItems = function(f, e, d){
+        if(e.length) for(var i=0;i<e.length;i++) setFormDefaultDataItem(f, i, e[i], d);
+    }, setFormDefaultDataItem = function(f, i, e, d){
+        if(e.type && (e.type === "radio" || e.type === "checkbox")) for(var j=0;j<d.length;j++){ if(e.value === d[j]) e.checked = true; }
+        else e.value = (d instanceof Array) ? d[i] : d;
+    }, submitForm = function(params){
+        return _submitForm(params.a.onMakeFormAction, params.a.onMakeFormMethod, params.a.onMakeFormData,
+            params.a.onPostValidateError,
+            params.a.onProcessSuccess, params.a.onProcessError,
+            params.f, params.a.validateRules, params.a.dataType);
+    }, _submitForm = function(f1, f2, f3, f4, f5, f6, f, vrs, dt){
+        makeFormData(f3, f);
+        if(!validateFormData(f4, f, vrs)) return false;
+        var args = {
+            url: makeFormAction(f1, f),
+            method: makeFormMethod(f2, f),
             data: null,
             contentType: false,
             processData: false,
-            success: function(data){
-                return opts.onProcessSuccess ? opts.onProcessSuccess(data) : processSuccess(data) ;
+            success: function(d){
+                return f5 ? f5.call(f, d) : processSuccess(d) ;
             },
-            error: function(xhr, status, error){
-                return opts.onProcessError ? opts.onProcessError(xhr, status, error) : processError(xhr, status, error) ;
+            error: function(x, s, e){
+                return f6 ? f6.call(f, x, s, e) : processError(x, s, e) ;
             }
         };
-        if(opts.dataType === "json"){
-            ajaxOpts.data = JSON.stringify(fm.fda);
-            ajaxOpts.contentType = "application/json";
+        if(dt === "json"){
+            args.data = JSON.stringify(f.fda);
+            args.contentType = "application/json";
         }
         else{
-            ajaxOpts.data = fm.fd;
+            args.data = f.fd;
         }
-        $.ajax(ajaxOpts);
+        $.ajax(args);
         return true;
-    }, validateFormData = function(ex, fm, fvrs, opts){
-        fm.fda = {};
-        fm.fd.forEach(function(v, k){
-            if(fm.fda[k] == null) fm.fda[k] = v;
+    }, validateFormData = function(f1, f, vrs){
+        f.fda = {};
+        f.fd.forEach(function(v, k){
+            if(f.fda[k] == null) f.fda[k] = v;
             else{
-                if(!(fm.fda[k] instanceof Array)) fm.fda[k] = [fm.fda[k]];
-                fm.fda[k].push(v);
+                if(!(f.fda[k] instanceof Array)) f.fda[k] = [f.fda[k]];
+                f.fda[k].push(v);
             }
         });
-        for(var i=0;i<fvrs.length;i++) if(!validateFormDataItem(ex, fm, fvrs[i], opts)) return false;
+        for(var i=0;i<vrs.length;i++) if(!validateFormDataItem(f1, f, vrs[i])) return false;
         return true;
-    }, validateFormDataItem = function(ex, fm, rule, opts){
-        if(typeof fm.fda[rule.name] !== "undefined"){
-            switch(rule.type){
+    }, validateFormDataItem = function(f1, f, vr){
+        if(typeof f.fda[vr.name] !== "undefined"){
+            switch(vr.type){
                 case "empty":
-                    if((typeof fm.fda[rule.name] === "string" && !fm.fda[rule.name])
-                        || (typeof fm.fda[rule.name] === "object" && !fm.fda[rule.name].name)){
-                        postValidateError(ex, fm, rule, opts);
+                    if((typeof f.fda[vr.name] === "string" && !f.fda[vr.name])
+                        || (typeof f.fda[vr.name] === "object" && !f.fda[vr.name].name)){
+                        postValidateError(f1, f, vr);
                         return false;
                     }
                     break;
             }
         }
         else{
-            switch(rule.type){
+            switch(vr.type){
                 case "unchecked":
-                    postValidateError(ex, fm, rule, opts);
+                    postValidateError(f1, f, vr);
                     return false;
             }
         }
         return true;
-    }, postValidateError = function(ex, fm, rule, opts){
-        if(opts.onPostValidateError) opts.onPostValidateError(fm, rule, opts);
+    }, postValidateError = function(f1, f, vr){
+        if(f1) f1.call(f, vr);
         else{
-            alert(rule.errmsg);
-            fm.find('[name="'+rule.name+'"]').focus();
+            alert(vr.errmsg);
+            f.find('[name="'+vr.name+'"]').focus();
         }
-    }, makeFormAction = function(fm, opts){
-        return opts.onMakeFormAction ? opts.onMakeFormAction(fm, opts) : fm.attr("action");
-    }, makeFormMethod = function(fm, opts){
-        return opts.onMakeFormMethod ? opts.onMakeFormMethod(fm, opts) : fm.attr("method");
-    }, makeFormData = function(fm, opts){
-        return opts.onMakeFormData ? opts.onMakeFormData(fm, opts) : (fm.fd = new FormData(fm[0]));
-    }, processSuccess = function(data){
-        console.log(data);
-    }, processError = function(xhr, status, error){
-        console.log(xhr, status, error);
+    }, makeFormAction = function(f1, f){
+        return f1 ? f1.call(f) : f.attr("action");
+    }, makeFormMethod = function(f1, f){
+        return f1 ? f1.call(f) : f.attr("method");
+    }, makeFormData = function(f1, f){
+        return f1 ? (f.fd = f1.call(f)) : (f.fd = new FormData(f[0]));
+    }, processSuccess = function(d){
+        console.log(d);
+    }, processError = function(x, s, e){
+        console.log(x, s, e);
+    }, init = function(params){
+        if(typeof params.f == "undefined"){
+            throw ("element 'form' is not found");
+        }
+        if(params.f.length > 1){
+            throw ("elements 'form' are found");
+        }
+        params.f.fd = params.f.fda = null;
+        setFormData(params);
+        params.f.unbind().bind("submit", function(){
+            submitForm(params);
+            return false;
+        });
     }, _tfjqp = {
         init : function(obj, opts){
-            if(!opts.validateRules) opts.validateRules = [];
-            if(!opts.defaultData) opts.defaultData = {};
-            var $obj = $(obj), objs = {fm: $obj.find("form")}, args = {};
-            if(typeof objs.fm == "undefined"){
-                throw ("element 'form' is not found");
-            }
-            if(objs.fm.length > 1){
-                throw ("elements 'form' are found");
-            }
-            objs.fm.fd = objs.fm.fda = null;
-            events(this, objs, args, opts);
+            opts = opts||{};
+            opts.validateRules = opts.validateRules||[];
+            opts.defaultData = opts.defaultData||{};
+            opts.dataType = opts.dataType||"form";
+            init({o: $(obj), f: $(obj).find("form"), a: opts});
         }
     };
     _tfjqp.init.prototype = _tfjqp;
     $.fn.tfform = function(opts){
-        my = new _tfjqp.init(this, opts);
-        return my;
+        return new _tfjqp.init(this, opts);
     };
 })(jQuery);
 
+/**
+ * tfdialog
+ *
+ * options:
+ *   variables:
+ *
+ *   functions:
+ *     onResizeWindow: function()
+ *     onShow: function()
+ *     onHide: function()
+ *
+ * public:
+ *   show
+ *   hide
+ *
+ */
 (function($){
-    var events = function(ex, objs, args, opts){
-
+    var createElement = function(t){
+        return $(document.createElement(t));
+    }, onDialogShow = function(p){
+        _onDialogShow(p, p.a.onShow)
+    }, _onDialogShow = function(p, f1){
+        p.b.css({overflow: "hidden"}).append((p.m = createElement("DIV")).css({display: "block", position: "absolute", left: 0, top: 0, background: "black", opacity: 0.16}));
+        p.b.append((p.f = createElement("DIV")).css({display: "block", position: "absolute"}));
+        p.p = p.o.parent();
+        p.a.osd = p.o.css("display");
+        p.a.osv = p.o.css("visibility");
+        p.f.append(p.o.css({display: "block"}));
+        onResize.call(window, p);
+        f1 ? f1.call(p.o) : null;
+    }, onResize = function(p){
+        _onResize(this, p.a.onResizeWindow, p.o, p.m, p.f);
+    }, _onResize = function(w, f1, o, m, f){
+        m.css({width: w.innerWidth, height: w.innerHeight});
+        f.css({left: (w.innerWidth-o.width())/2, top: (w.innerHeight-o.height())/2});
+        f1 ? f1.call(o) : null;
+    }, onDialogHide = function(params){
+        _onDialogHide(params.a.onHide, params.o.css({display: params.a.osd, visibility: params.a.osv}), params.p, params.m, params.f);
+    }, _onDialogHide = function(f1, o, p, m, f){
+        o.css({display: o.osd, visibility: o.osv});
+        p.append(o);
+        m.remove();
+        f.remove();
+        f1 ? f1.call(o) : null;
+    }, onButtonClick = function(params){
+        _onButtonClick(this, params.s);
+    }, _onButtonClick = function(b, s){
+        switch(b.getAttribute("data-dialog-button")){
+            case "close":
+                s.hide();
+                break;
+        }
+    }, init = function(params){
+        params.s.params = params;
+        params.w.bind("resize", function(){
+            onResize.call(this, params);
+        });
+        params.o.find("[data-dialog-button]").unbind().click(function(){
+            onButtonClick.call(this, params);
+        });
+        params.s.show();
     }, _tfjqp = {
+        show : function(){
+            onDialogShow(this.params);
+        },
+        hide : function(){
+            onDialogHide(this.params);
+        },
         init : function(obj, opts){
-            var objs = {}, args = {};
-            events(this, objs, args, opts);
+            init({s: this, o: $(obj), w: $(window), b: $(document.body), a: opts||{}});
         }
     };
     _tfjqp.init.prototype = _tfjqp;
     $.fn.tfdialog = function(opts){
-        my = new _tfjqp.init(this, opts);
-        return my;
+        return new _tfjqp.init(this, opts);
+    };
+})(jQuery);
+
+/**
+ * tftips
+ *
+ * options:
+ *   variables:
+ *     text: ""
+ *     class: ""
+ *     timeout: 3000
+ *
+ *   functions:
+ *
+ * public:
+ *
+ */
+(function($){
+    var createElement = function(t){
+        return $(document.createElement(t));
+    }, onTipsShow = function(params){
+        if(window.tftipsT) onTipsHideOther(params);
+        window.tftipsT = window.setTimeout(function(){
+            onTipsHide(params);
+        }, params.a.timeout||3000);
+        params.o.append((params.t = createElement("DIV")).addClass((params.a.class) ? "tips " + params.a.class : "tips").text(params.a.text));
+        params.t.css({top: (params.o.height()-params.t.height())/2, left: (params.o.width()-params.t.width())/2});
+    }, onTipsHideOther = function(params){
+        clearTimeout(window.tftipsT);
+        window.tftipsT = null;
+        params.o.find(".tips").remove();
+    }, onTipsHide = function(params){
+        params.t.remove();
+    }, init = function(params){
+        onTipsShow(params);
+    }, _tfjqp = {
+        init : function(obj, opts){
+            init({s: this, o: $(obj), a: opts||{}});
+        }
+    };
+    _tfjqp.init.prototype = _tfjqp;
+    $.fn.tftips = function(opts){
+        return new _tfjqp.init(this, opts);
     };
 })(jQuery);
