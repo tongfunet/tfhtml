@@ -52,21 +52,19 @@
         _loadData(params.a.onMakeDataUrl, params.a.onMakeDataMethod, params.a.onMakeDataData,
             params.a.onProcessSuccess, params.a.onProcessError,
             params.a.onDrawData, params.a.onCreateBodyRow, params.a.onCreateBodyRowField,
-            params.a.onDrawHead,
-            params.a.onDrawPage, params.a.onCreatePageButton,
+            params.a.onDrawHead, params.a.onDrawPage, params.a.onCreatePageButton, params.a.onDrawTable,
             params.o, params.s);
     }, _loadData = function(f1, f2, f3,
                             f4, f5,
                             f6, f7, f8,
-                            f9,
-                            f10, f11,
+                            f9, f10, f11, f12,
                             o, s){
         $.ajax({
             url: makeDataUrl(f1, o, {pn: s.getDataUrlPN(), sorts: s.getDataUrlSorts()}),
             method: makeDataMethod(f2, o),
             data: makeDataData(f3, o),
             success: function(d){
-                return f4 ? f4.call(o, d) : processSuccess(f6, f7, f8, f9, f10, f11, o, s, d) ;
+                return f4 ? f4.call(o, d) : processSuccess(f6, f7, f8, f9, f10, f11, f12, o, s, d) ;
             },
             error: function(xhr, st, err){
                 return f5 ? f5.call(o, xhr, st, err) : processError(xhr, st, err) ;
@@ -78,17 +76,17 @@
         return f1 ? f1.call(o) : "get";
     }, makeDataData = function(f1, o){
         return f1 ? f1.call(o) : {};
-    }, processSuccess = function(f1, f2, f3, f4, f5, f6, o, s, d){
-        drawData(f1, f2, f3, f4, f5, f6, o, s.params.a, d);
+    }, processSuccess = function(f1, f2, f3, f4, f5, f6, f7, o, s, d){
+        drawData(f1, f2, f3, f4, f5, f6, f7, o, s.params.a, d);
         eventSort(s, s.params.a);
         eventPage(s, s.params.a);
     }, processError = function(xhr, st, err){
         console.log(xhr, st, err);
-    }, drawData = function(f1, f2, f3, f4, f5, f6, o, a, d){
+    }, drawData = function(f1, f2, f3, f4, f5, f6, f7, o, a, d){
         if(f1) f1.call(o, d);
         else{
             drawTableHead(f4, o, a);
-            drawTableData(f2, f3, o, a, o.find(a.qsbb), d.data);
+            drawTableData(f7, f2, f3, o, a, o.find(a.qsbb), d.data);
             drawTablePage(f5, f6, o, a, o.find(a.qspb), d.pagination);
         }
     }, drawTableHead = function(f1, o, a){
@@ -101,19 +99,22 @@
                 else if (fv === "asc") $f.append("<i>(asc)</i>");
             }
         }
-    }, drawTableData = function(f1, f2, o, a, tb, d){
-        var i, f, tr, td;
-        tb.find(a.qsbrs).not(a.qspb).remove();
-        for(i=0;i<d.length;i++){
-            j = 0;
-            tr = createBodyRow(f1, o);
-            for(f in d[i]){
-                td = createBodyRowField(f2, o);
-                td.html(d[i][f]);
-                tr.append(td);
-                j++;
+    }, drawTableData = function(f1, f2, f3, o, a, tb, d){
+        if(f1) f1.call(o, {data: d});
+        else{
+            var i, f, tr, td;
+            tb.find(a.qsbrs).not(a.qspb).remove();
+            for(i=0;i<d.length;i++){
+                j = 0;
+                tr = createBodyRow(f2, o);
+                for(f in d[i]){
+                    td = createBodyRowField(f3, o);
+                    td.html(d[i][f]);
+                    tr.append(td);
+                    j++;
+                }
+                tb.append(tr);
             }
-            tb.append(tr);
         }
     }, createBodyRow = function(f1, o){
         return f1 ? f1.call(o) : createElement("TR");
@@ -121,15 +122,20 @@
         return f1 ? f1.call(o) : createElement("TD");
     }, createPageButton = function(f1, o, pn, label){
         return f1 ? f1.call(o, {pn: pn, label: label}) : createElement("A").attr("data-pn", pn).html(label);
+    }, replacePageData = function(info, pg){
+        for(var p in pg){
+            info = info.replace("{" + p + "}", pg[p]);
+        }
+        return info;
     }, drawTablePage = function(f1, f2, o, a, pb, pg){
         if(f1) f1.call(o, {page: pg});
         else{
             pb.children().remove();
-            pb.append(createPageButton(f2, o, 1, "home"));
-            pb.append(createPageButton(f2, o, pg.currentpage-1, "previous"));
-            pb.append(createPageButton(f2, o, pg.currentpage+1, "next"));
-            pb.append(createPageButton(f2, o, pg.pages, "last"));
-            pb.append("<span>total " + pg.total + ", percent page " + pg.pagesize + ", total pages " + pg.pages + "</span>");
+            pb.append(createPageButton(f2, o, 1, a.textPageButtonHome || "home"));
+            pb.append(createPageButton(f2, o, pg.currentpage-1, a.textPageButtonPrevious || "previous"));
+            pb.append(createPageButton(f2, o, pg.currentpage+1, a.textPageButtonNext || "next"));
+            pb.append(createPageButton(f2, o, pg.totalpage, a.textPageButtonLast || "last"));
+            pb.append(a.textPageInfo ? replacePageData(a.textPageInfo, pg) : replacePageData("<span>total {total}, percent page {percentpage}, total pages {totalpage}</span>", pg));
         }
     }, eventSort = function(s, a){
         s.params.hb.find(a.qshfs).unbind("click").click(function(){
@@ -154,6 +160,10 @@
         loadData(params);
     }, _tfjqp = {
         load : function(){
+            this.params.a.pn = 1;
+            loadData(this.params);
+        },
+        refresh : function(){
             loadData(this.params);
         },
         getDataUrlPN : function(){
@@ -216,10 +226,17 @@
     }, setFormDefaultDataItems = function(f, e, d){
         if(e.length) for(var i=0;i<e.length;i++) setFormDefaultDataItem(f, i, e[i], d);
     }, setFormDefaultDataItem = function(f, i, e, d){
-        if(e.type && (e.type === "radio" || e.type === "checkbox")) for(var j=0;j<d.length;j++){ if(e.value === d[j]) e.checked = true; }
+        if(e.type && (e.type === "radio" || e.type === "checkbox")){
+            e.checked = false;
+            for(var j=0;j<d.length;j++){ if(e.value === d[j]) e.checked = true; }
+        }
+        else if(e.tagName === "SELECT") for(var j=0;j<e.options.length;j++) setFormDefaultDataItem2(f, j, e.options[j], d);
         else e.value = (d instanceof Array) ? d[i] : d;
+    }, setFormDefaultDataItem2 = function(f, j, e, d){
+        e.selected = false;
+        for(var k=0;k<d.length;k++){ if(e.value === d[k]) e.selected = true; }
     }, submitForm = function(params){
-        return _submitForm(params.a.onMakeFormAction, params.a.onMakeFormMethod, params.a.onMakeFormData,
+        return (params.a.onSubmitForm) ? params.a.onSubmitForm.call(params.o) : _submitForm(params.a.onMakeFormAction, params.a.onMakeFormMethod, params.a.onMakeFormData,
             params.a.onPostValidateError,
             params.a.onProcessSuccess, params.a.onProcessError,
             params.f, params.a.validateRules, params.a.dataType);
@@ -274,6 +291,9 @@
         else{
             switch(vr.type){
                 case "unchecked":
+                    postValidateError(f1, f, vr);
+                    return false;
+                case "unselected":
                     postValidateError(f1, f, vr);
                     return false;
             }
@@ -345,8 +365,8 @@
     }, onDialogShow = function(p){
         _onDialogShow(p, p.a.onShow)
     }, _onDialogShow = function(p, f1){
-        p.b.css({overflow: "hidden"}).append((p.m = createElement("DIV")).css({display: "block", position: "absolute", left: 0, top: 0, background: "black", opacity: 0.16}));
-        p.b.append((p.f = createElement("DIV")).css({display: "block", position: "absolute"}));
+        p.b.css({overflow: "hidden"}).append((p.m = createElement("DIV")).css({display: "block", position: "absolute", left: 0, top: 0, background: "black", opacity: 0.16, zIndex: 1568}));
+        p.b.append((p.f = createElement("DIV")).css({display: "block", position: "absolute", zIndex: 1569}));
         p.p = p.o.parent();
         p.a.osd = p.o.css("display");
         p.a.osv = p.o.css("visibility");
@@ -424,7 +444,7 @@
             onTipsHide(params);
         }, params.a.timeout||3000);
         params.o.append((params.t = createElement("DIV")).addClass((params.a.class) ? "tips " + params.a.class : "tips").text(params.a.text));
-        params.t.css({top: (params.o.height()-params.t.height())/2, left: (params.o.width()-params.t.width())/2});
+        params.t.css({top: (params.o.height()-params.t.height())/2, left: (params.o.width()-params.t.width())/2, zIndex: 1588});
     }, onTipsHideOther = function(params){
         clearTimeout(window.tftipsT);
         window.tftipsT = null;

@@ -6,8 +6,8 @@
   ],
   "pagination": {
     "total": 3,
-    "pagesize": 10,
-    "pages": 1,
+    "percentpage": 10,
+    "totalpage": 1,
     "currentpage": 1
   }
 }

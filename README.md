@@ -1,4 +1,4 @@
-<h1 align="center">TFHtml v0.3.0</h1>
+<h1 align="center">TFHtml v0.3.1</h1>
 
 ## TFHtml
 
