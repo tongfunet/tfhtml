@@ -14,3 +14,8 @@
 * [0.3.1] The tftable plugin has added the "onDrawTable" callback method, which combines "onDrawHead and onDrawPage" to enable customization of each part of the table.
 * [0.3.1] The pagination button text of the tftable plugin can be customized through the "textPageButtons XXX" parameter, and the pagination information can be customized through the "textPageInfo" parameter.
 * [0.3.1] The tfform plugin has added support for the forgotten select element in HTML language.
+
+## [v0.3.2] - 2024/9/18
+
+* [0.3.2] Added the $.gets attribute to retrieve the Query-STRING parameter.
+* [0.3.2] The tftable has added an "afterProcessSuccess" callback method to handle content beyond standardized data.
