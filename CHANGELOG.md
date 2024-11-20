@@ -19,3 +19,9 @@
 
 * [0.3.2] Added the $.gets attribute to retrieve the Query-STRING parameter.
 * [0.3.2] The tftable has added an "afterProcessSuccess" callback method to handle content beyond standardized data.
+
+## [v0.3.3] - 2024/10/31
+
+* [0.3.3] The callback function 'onDrawHead' for plugin 'tftable' has been changed to 'onDrawTableHead', 'onDrawPage' has been changed to 'onDrawTablePage', and 'onDrawTable' has been changed to 'onDrawTableData'.
+* [0.3.3] The plugin 'tftable' has added the 'onRetrieveData' callback method to process the data returned by the server-side.
+* [0.3.3] The plugin 'tfform' has adjusted the compatibility of default values for HTML elements 'radio' and 'select', allowing non Array values to be passed in.
